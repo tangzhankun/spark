@@ -23,8 +23,16 @@ import com.github.fommil.netlib.BLAS.{getInstance => NativeBLAS}
 import org.apache.spark.Logging
 
 import org.apache.spark.mllib.linalg.fpga.FpgaBLAS
+import org.apache.spark.mllib.linalg.fpga.DaalBLAS
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
+
+import com.intel.daal.data_management.data.HomogenNumericTable
+import com.intel.daal.data_management.data.NumericTable
+import com.intel.daal.algorithms.gemm._
+import com.intel.daal.services.DaalContext
+import com.intel.daal.services.Environment
+
 
 /**
  * BLAS routines for MLlib's vectors and matrices.
@@ -34,6 +42,7 @@ private[spark] object BLAS extends Serializable with Logging {
   @transient private var _f2jBLAS: NetlibBLAS = _
   @transient private var _nativeBLAS: NetlibBLAS = _
   @transient private var _fpgaBLAS:FpgaBLAS = _
+  @transient private var _daalBLAS:DaalBLAS = _
 
   // For level-1 routines, we use Java implementation.
   private def f2jBLAS: NetlibBLAS = {
@@ -248,6 +257,13 @@ private[spark] object BLAS extends Serializable with Logging {
     _fpgaBLAS
   }
 
+  private def daalBLAS:DaalBLAS = {
+    if (_daalBLAS == null){
+      _daalBLAS = new DaalBLAS()
+    }
+    _daalBLAS
+  }
+
   /**
    * Adds alpha * x * x.t to a matrix in-place. This is the same as BLAS's ?SPR.
    *
@@ -403,6 +419,65 @@ private[spark] object BLAS extends Serializable with Logging {
     require(B.numCols == C.numCols,
       s"The columns of C don't match the columns of B. C: ${C.numCols}, A: ${B.numCols}")
 
+    // TODO: use DAAL
+
+    // Step1: Init the DAAL environment
+    /* Use the Environment class to switch the accelerator mode
+     If you need use FPGA+CPU mode,  choose "useFpgaBalanced"
+     If you need use FPGA-only mode, choose "useFpgaMax"
+     If you need use CPU-only mode,  choose "useCPU"*/
+    // logInfo(" [DAALgemm] Initial the DAAL environment")
+    val context : DaalContext = new DaalContext()
+    val a : java.lang.Double = 0.0
+    val gemmAlgorithm : Batch = new Batch(context, a.getClass, Method.defaultDense)
+    //Environment.setAcceleratorMode( Environment.Accelerator.useFpgaBalanced)
+
+    // Step2: Convert the SPark Matrix into DAAL data structure
+    logInfo(" [DAALgemm] Convert the input matrix A")
+    val inputA:HomogenNumericTable = new HomogenNumericTable(
+      context,
+      A.values,
+      A.numCols.toLong,
+      A.numRows.toLong
+    )
+
+    logInfo(" [DAALgemm] Convert the input matrix B")
+    val inputB:HomogenNumericTable  = new HomogenNumericTable(
+      context,
+      B.values,
+      B.numCols.toLong,
+      B.numRows.toLong
+    )
+
+    gemmAlgorithm.input.set(InputId.aMatrix, inputA)
+    gemmAlgorithm.input.set(InputId.bMatrix, inputB)
+
+    logInfo(" [DAALgemm] Convert the transpose information")
+    A.isTransposed match {
+      case true => gemmAlgorithm.parameter.setTransposeA(true)
+      case false => gemmAlgorithm.parameter.setTransposeA(false)
+    }
+
+    B.isTransposed match {
+      case true => gemmAlgorithm.parameter.setTransposeB(true)
+      case false => gemmAlgorithm.parameter.setTransposeA(false)
+    }
+
+    //Step3: Calculate the result
+    logInfo(" [DAALgemm] Calculate the matrix multiplication")
+    val cValues = daalBLAS.dgemm(gemmAlgorithm)
+
+    //Step4: Convert the result into Spark ML
+    logInfo(" [DAALgemm] Convert the result matrix")
+    for (i <- 0 to C.numRows -1){
+      for (j <- 0 to B.numCols -1){
+        C.update(i,j,cValues(i * B.numCols + j))
+      }
+    }
+
+    context.dispose()
+
+    /*
     logInfo("gemm: Use FPGA to calculate GEMM ... begin")
     logDebug("gemm: FPGA Gemm Parameter Table")
     logDebug("gemm: Matrix A Transpose Information = " + tAstr)
@@ -430,6 +505,7 @@ private[spark] object BLAS extends Serializable with Logging {
       }
     }
     logInfo("gemm: Use FPGA to calculate GEMM ... end")
+*/
 
   }
 

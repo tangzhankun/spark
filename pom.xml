@@ -2321,7 +2321,7 @@
         <version>0.7.0</version>
         <configuration>
           <verbose>false</verbose>
-          <failOnViolation>true</failOnViolation>
+          <failOnViolation>false</failOnViolation>
           <includeTestSourceDirectory>false</includeTestSourceDirectory>
           <failOnWarning>false</failOnWarning>
           <sourceDirectory>${basedir}/src/main/scala</sourceDirectory>
@@ -2387,6 +2387,27 @@
           </execution>
         </executions>
       </plugin>
+        <plugin>
+          <groupId>org.apache.maven.plugins</groupId>
+          <artifactId>maven-install-plugin</artifactId>
+          <inherited>false</inherited>
+          <version>2.5.2</version>
+          <executions>
+            <execution>
+               <phase>initialize</phase>
+               <goals>
+                  <goal>install-file</goal>
+               </goals>
+               <configuration>
+                  <file>daal.jar</file>
+                     <groupId>com.intel</groupId>
+                     <artifactId>daal</artifactId>
+                     <version>1.7.0</version>
+                     <packaging>jar</packaging>
+                  </configuration>
+            </execution>
+          </executions>
+        </plugin>
     </plugins>
   </build>
 
@@ -2521,7 +2542,7 @@
     <profile>
       <id>hadoop-3.0</id>
       <properties>
-        <hadoop.version>3.0.0-alpha2-SNAPSHOT2</hadoop.version>
+        <hadoop.version>3.0.0-alpha2-SNAPSHOT</hadoop.version>
       </properties>
     </profile>     
 
