@@ -433,47 +433,44 @@ private[spark] object BLAS extends Serializable with Logging {
     //Environment.setAcceleratorMode( Environment.Accelerator.useFpgaBalanced)
 
     // Step2: Convert the SPark Matrix into DAAL data structure
-    logInfo(" [DAALgemm] Convert the input matrix A")
+    println(s" [DAALgemm] Convert the input matrix A: ${A.numRows} * ${A.numCols}")
     val inputA:HomogenNumericTable = new HomogenNumericTable(
       context,
       A.values,
-      A.numCols.toLong,
-      A.numRows.toLong
+      A.numRows.toLong,
+      A.numCols.toLong
     )
 
-    logInfo(" [DAALgemm] Convert the input matrix B")
+    println(s" [DAALgemm] Convert the input matrix B: ${B.numRows} * ${B.numCols}")
     val inputB:HomogenNumericTable  = new HomogenNumericTable(
       context,
       B.values,
-      B.numCols.toLong,
-      B.numRows.toLong
+      B.numRows.toLong,
+      B.numCols.toLong
     )
 
     gemmAlgorithm.input.set(InputId.aMatrix, inputA)
     gemmAlgorithm.input.set(InputId.bMatrix, inputB)
 
-    logInfo(" [DAALgemm] Convert the transpose information")
-    A.isTransposed match {
-      case true => gemmAlgorithm.parameter.setTransposeA(true)
-      case false => gemmAlgorithm.parameter.setTransposeA(false)
-    }
-
-    B.isTransposed match {
-      case true => gemmAlgorithm.parameter.setTransposeB(true)
-      case false => gemmAlgorithm.parameter.setTransposeA(false)
-    }
+    println(" [DAALgemm] Convert the transpose information, set to false")
+    gemmAlgorithm.parameter.setTransposeA(false)
+    gemmAlgorithm.parameter.setTransposeB(false)
 
     //Step3: Calculate the result
-    logInfo(" [DAALgemm] Calculate the matrix multiplication")
-    val cValues = daalBLAS.dgemm(gemmAlgorithm)
+    println(" [DAALgemm] Calculate the matrix multiplication")
+    val cValues: Array[Double] = daalBLAS.dgemm(gemmAlgorithm)
 
     //Step4: Convert the result into Spark ML
-    logInfo(" [DAALgemm] Convert the result matrix")
-    for (i <- 0 to C.numRows -1){
-      for (j <- 0 to B.numCols -1){
-        C.update(i,j,cValues(i * B.numCols + j))
+    println(s" [DAALgemm] Convert the result matrix c: length: ${cValues.length}")
+    for (i <- 0 to (A.numRows -1)){
+      for (j <- 0 to (B.numCols -1)){
+        if ((i*B.numCols + j) >= cValues.length) {
+          println("[DAALgemm] invalid index")
+        }
+        C.update(i, j, cValues(i * B.numCols + j))
       }
     }
+    //C = new DenseMatrix(A.numRows, B.numCols, cValues, false)
 
     context.dispose()
 
