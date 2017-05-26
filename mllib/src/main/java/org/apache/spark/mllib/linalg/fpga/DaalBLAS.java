@@ -14,7 +14,17 @@ public class DaalBLAS {
   //private Batch gemmAlgorithm = new Batch(context, java.lang.Double.class, Method.defaultDense);
 
   public DaalBLAS(){
-    Environment.setAcceleratorMode( Environment.AcceleratorMode.useFpgaBalanced);
+    String mode = System.getenv("DAAL_MODE");
+    if ("0".equals(mode)) {
+      Environment.setAcceleratorMode( Environment.AcceleratorMode.useCpu);
+    } else if ("1".equals(mode)) {
+      Environment.setAcceleratorMode( Environment.AcceleratorMode.useFpgaBalanced);
+    } else if ("2".equals(mode)){
+      Environment.setAcceleratorMode( Environment.AcceleratorMode.useFpgaMax);
+    } else {
+      Environment.setAcceleratorMode( Environment.AcceleratorMode.useCpu);
+    }
+
   }
 
   public double[] dgemm(Batch gemmAlgorithm){
