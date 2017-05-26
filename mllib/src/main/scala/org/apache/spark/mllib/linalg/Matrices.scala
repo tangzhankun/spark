@@ -84,8 +84,8 @@ sealed trait Matrix extends Serializable with Logging{
   @Since("1.2.0")
   def multiply(y: DenseMatrix): DenseMatrix = {
     val C: DenseMatrix = DenseMatrix.zeros(numRows, y.numCols)
-    logInfo("gemm: DenseMatrix.multiply() Execution")
-    println("gemm: DenseMatrix.multiply() Execution")
+    //logInfo("gemm: DenseMatrix.multiply() Execution")
+    //println("gemm: DenseMatrix.multiply() Execution")
     BLAS.gemm(1.0, this, y, 0.0, C)
     C
   }
@@ -93,8 +93,8 @@ sealed trait Matrix extends Serializable with Logging{
   /** Convenience method for `Matrix`-`DenseVector` multiplication. For binary compatibility. */
   @Since("1.2.0")
   def multiply(y: DenseVector): DenseVector = {
-    logInfo("gemm: DenseMatrix.multiply() matrix*vector")
-    println("gemm: DenseMatrix.multiply() matrix*vector")
+    //logInfo("gemm: DenseMatrix.multiply() matrix*vector")
+    //println("gemm: DenseMatrix.multiply() matrix*vector")
     multiply(y.asInstanceOf[Vector])
   }
 

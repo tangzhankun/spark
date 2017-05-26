@@ -451,7 +451,6 @@ private[spark] object BLAS extends Serializable with Logging {
 
     gemmAlgorithm.input.set(InputId.aMatrix, inputA)
     gemmAlgorithm.input.set(InputId.bMatrix, inputB)
-
     println(" [DAALgemm] Convert the transpose information, set to false")
     gemmAlgorithm.parameter.setTransposeA(false)
     gemmAlgorithm.parameter.setTransposeB(false)
@@ -526,7 +525,7 @@ private[spark] object BLAS extends Serializable with Logging {
     require(nB == C.numCols,
       s"The columns of C don't match the columns of B. C: ${C.numCols}, A: $nB")
 
-    logInfo("gemm: Use FPGA to calculate GEMM in Sparse Mode ... ")
+    //logInfo("gemm: Use FPGA to calculate GEMM in Sparse Mode ... ")
 
     val Avals = A.values
     val Bvals = B.values
@@ -673,7 +672,7 @@ private[spark] object BLAS extends Serializable with Logging {
     val mA = if (!A.isTransposed) A.numRows else A.numCols
     val nA = if (!A.isTransposed) A.numCols else A.numRows
 
-    logDebug("gemm: Use FPGA to calculate GEMM ... begin")
+    //logDebug("gemm: Use FPGA to calculate GEMM ... begin")
     var Avalues = A.values.map(new java.lang.Double(_)).toBuffer.asJava
     var xvalues = x.values.map(new java.lang.Double(_)).toBuffer.asJava
     var yvalues = y.values.map(new java.lang.Double(_)).toBuffer.asJava
@@ -681,7 +680,7 @@ private[spark] object BLAS extends Serializable with Logging {
     var yresults = fpgaBLAS.dgemv(tStrA, mA, nA, alpha, Avalues, mA, xvalues, 1, beta, yvalues, 1).asScala.map(_.doubleValue)
     var i:Int = 0
     for (i <- 0 to mA -1){ y.values(i) = yresults.apply(i) }
-    logDebug("gemm: Use FPGA to calculate GEMV ... end")
+    //logDebug("gemm: Use FPGA to calculate GEMV ... end")
   }
 
   /**

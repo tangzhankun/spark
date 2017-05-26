@@ -402,50 +402,50 @@ class BlockMatrix @Since("1.3.0") (
       s"of B must be equal. A.numCols: ${numCols()}, B.numRows: ${other.numRows()}. If you " +
       "think they should be equal, try setting the dimensions of A and B explicitly while " +
       "initializing them.")
-    logInfo("gemm: BlockMatrix.multiply() Execution")
-    println("gemm: BlockMatrix.multiply() Execution")
+    //logInfo("gemm: BlockMatrix.multiply() Execution")
+    //println("gemm: BlockMatrix.multiply() Execution")
     if (colsPerBlock == other.rowsPerBlock) {
 
-      println("gemm: BlockMatrix.multiply() Build resultPartitioner")
+      //println("gemm: BlockMatrix.multiply() Build resultPartitioner")
       val resultPartitioner = GridPartitioner(numRowBlocks, other.numColBlocks,
         math.max(blocks.partitions.length, other.blocks.partitions.length))
       val (leftDestinations, rightDestinations) = simulateMultiply(other, resultPartitioner)
 
-      println("gemm: BlockMatrix.multiply() Flatmap Matrix A")
+      //println("gemm: BlockMatrix.multiply() Flatmap Matrix A")
       // Each block of A must be multiplied with the corresponding blocks in the columns of B.
       val flatA = blocks.flatMap { case ((blockRowIndex, blockColIndex), block) =>
         val destinations = leftDestinations.getOrElse((blockRowIndex, blockColIndex), Set.empty)
         destinations.map(j => (j, (blockRowIndex, blockColIndex, block)))
       }
 
-      println("gemm: BlockMatrix.multiply() Flatmap Matrix B")
+      //println("gemm: BlockMatrix.multiply() Flatmap Matrix B")
       // Each block of B must be multiplied with the corresponding blocks in each row of A.
       val flatB = other.blocks.flatMap { case ((blockRowIndex, blockColIndex), block) =>
         val destinations = rightDestinations.getOrElse((blockRowIndex, blockColIndex), Set.empty)
         destinations.map(j => (j, (blockRowIndex, blockColIndex, block)))
       }
 
-      println("gemm: BlockMatrix.multiply() Calculate New Matrix")
+      //println("gemm: BlockMatrix.multiply() Calculate New Matrix")
       val newBlocks = flatA.cogroup(flatB, resultPartitioner).flatMap { case (pId, (a, b)) =>
         a.flatMap { case (leftRowIndex, leftColIndex, leftBlock) => {
-          println("gemm: BlockMatrix.multiply() Left Matrix: "+leftRowIndex.toString+" "+leftColIndex.toString)
+          //println("gemm: BlockMatrix.multiply() Left Matrix: "+leftRowIndex.toString+" "+leftColIndex.toString)
           b.filter(_._1 == leftColIndex).map { 
             case (rightRowIndex, rightColIndex, rightBlock) =>{
-              println("gemm: BlockMatrix.multiply() Ready for multiplication");
+              //println("gemm: BlockMatrix.multiply() Ready for multiplication");
               val C = rightBlock match {
                 case dense: DenseMatrix => {println("gemm:  BlockMatrix.multiply() Dense*Dense");leftBlock.multiply(dense)}
                 case sparse: SparseMatrix => {println("gemm:  BlockMatrix.multiply() Dense*Sparse");leftBlock.multiply(sparse.toDense)}
                 case _ =>
                   throw new SparkException(s"Unrecognized matrix type ${rightBlock.getClass}.")
               }
-              println("gemm: BlockMatrix.multiply() Ready to return result");
+              //println("gemm: BlockMatrix.multiply() Ready to return result");
               ((leftRowIndex, rightColIndex), C.toBreeze)
             }
           }
         }}
       }.reduceByKey(resultPartitioner, (a, b) => a + b).mapValues(Matrices.fromBreeze)
       // TODO: Try to use aggregateByKey instead of reduceByKey to get rid of intermediate matrices
-      println("gemm: BlockMatrix.multiply() Return Result")
+      //println("gemm: BlockMatrix.multiply() Return Result")
       new BlockMatrix(newBlocks, rowsPerBlock, other.colsPerBlock, numRows(), other.numCols())
     } else {
       throw new SparkException("colsPerBlock of A doesn't match rowsPerBlock of B. " +
