@@ -457,51 +457,8 @@ private[spark] object BLAS extends Serializable with Logging {
 
     //Step3: Calculate the result
     println(" [DAALgemm] Calculate the matrix multiplication")
-    val cValues: Array[Double] = daalBLAS.dgemm(gemmAlgorithm)
-
-    //Step4: Convert the result into Spark ML
-    println(s" [DAALgemm] Convert the result matrix c: length: ${cValues.length}")
-    for (i <- 0 to (A.numRows -1)){
-      for (j <- 0 to (B.numCols -1)){
-        if ((i*B.numCols + j) >= cValues.length) {
-          println("[DAALgemm] invalid index")
-        }
-        C.update(i, j, cValues(i * B.numCols + j))
-      }
-    }
-    //C = new DenseMatrix(A.numRows, B.numCols, cValues, false)
-
+    C.values = daalBLAS.dgemm(gemmAlgorithm)
     context.dispose()
-
-    /*
-    logInfo("gemm: Use FPGA to calculate GEMM ... begin")
-    logDebug("gemm: FPGA Gemm Parameter Table")
-    logDebug("gemm: Matrix A Transpose Information = " + tAstr)
-    logDebug("gemm: Matrix A Transpose Information = " + tBstr)
-    logDebug("gemm: A.numRows = " + A.numRows + " A.numCols = " + A.numCols)
-    logDebug("gemm: B.numRows = " + B.numRows + " B.numCols = " + B.numCols)
-    //logDebug("gemm: Parameter Alpha = " + alpha + " Parameter Beta = " + beta)
-    //var maValue:String = ""
-    //A.values.foreach(a => maValue = maValue + a.toString + " ")
-    //var mbValue:String = ""
-    //B.values.foreach(b => mbValue = mbValue + b.toString + " ")
-    //logDebug("gemm: Matrix A Values =" + maValue)
-    //logDebug("gemm: Matrix B Values =" + mbValue)
-    
-    var Avalues = A.values.map(new java.lang.Double(_)).toBuffer.asJava
-    var Bvalues = B.values.map(new java.lang.Double(_)).toBuffer.asJava
-    var Cvalues = C.values.map(new java.lang.Double(_)).toBuffer.asJava
-    var Cresults = fpgaBLAS.dgemm(tAstr, tBstr, A.numRows, B.numCols, A.numCols, alpha, Avalues, lda,
-        Bvalues, ldb, beta, Cvalues, C.numRows).asScala.map(_.doubleValue)
-    var i:Int = 0
-    var j:Int = 0
-    for (i <- 0 to C.numRows -1){
-      for (j <- 0 to B.numCols -1){ 
-        C.update(i,j,Cresults.apply(i*B.numCols+j))
-      }
-    }
-    logInfo("gemm: Use FPGA to calculate GEMM ... end")
-*/
 
   }
 

@@ -253,7 +253,7 @@ private[spark] class MatrixUDT extends UserDefinedType[Matrix] {
 class DenseMatrix @Since("1.3.0") (
     @Since("1.0.0") val numRows: Int,
     @Since("1.0.0") val numCols: Int,
-    @Since("1.0.0") val values: Array[Double],
+    @Since("1.0.0") var values: Array[Double],
     @Since("1.3.0") override val isTransposed: Boolean) extends Matrix {
 
   require(values.length == numRows * numCols, "The number of values supplied doesn't match the " +
@@ -295,6 +295,7 @@ class DenseMatrix @Since("1.3.0") (
       breezeMatrix.t
     }
   }
+
 
   private[mllib] def apply(i: Int): Double = values(i)
 
