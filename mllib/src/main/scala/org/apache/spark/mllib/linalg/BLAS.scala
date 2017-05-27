@@ -433,7 +433,7 @@ private[spark] object BLAS extends Serializable with Logging {
     //Environment.setAcceleratorMode( Environment.Accelerator.useFpgaBalanced)
 
     // Step2: Convert the SPark Matrix into DAAL data structure
-    println(s" [DAALgemm] Convert the input matrix A: ${A.numRows} * ${A.numCols}")
+    //println(s" [DAALgemm] Convert the input matrix A: ${A.numRows} * ${A.numCols}")
     val inputA:HomogenNumericTable = new HomogenNumericTable(
       context,
       A.values,
@@ -441,7 +441,7 @@ private[spark] object BLAS extends Serializable with Logging {
       A.numCols.toLong
     )
 
-    println(s" [DAALgemm] Convert the input matrix B: ${B.numRows} * ${B.numCols}")
+    //println(s" [DAALgemm] Convert the input matrix B: ${B.numRows} * ${B.numCols}")
     val inputB:HomogenNumericTable  = new HomogenNumericTable(
       context,
       B.values,
@@ -451,12 +451,12 @@ private[spark] object BLAS extends Serializable with Logging {
 
     gemmAlgorithm.input.set(InputId.aMatrix, inputA)
     gemmAlgorithm.input.set(InputId.bMatrix, inputB)
-    println(" [DAALgemm] Convert the transpose information, set to false")
+    //println(" [DAALgemm] Convert the transpose information, set to false")
     gemmAlgorithm.parameter.setTransposeA(false)
     gemmAlgorithm.parameter.setTransposeB(false)
 
     //Step3: Calculate the result
-    println(" [DAALgemm] Calculate the matrix multiplication")
+    //println(" [DAALgemm] Calculate the matrix multiplication")
     C.values = daalBLAS.dgemm(gemmAlgorithm)
     context.dispose()
 
