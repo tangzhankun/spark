@@ -389,8 +389,14 @@ private[spark] object BLAS extends Serializable with Logging {
       s"The rows of C don't match the rows of A. C: ${C.numRows}, A: ${A.numRows}")
     require(B.numCols == C.numCols,
       s"The columns of C don't match the columns of B. C: ${C.numCols}, A: ${B.numCols}")
-    nativeBLAS.dgemm(tAstr, tBstr, A.numRows, B.numCols, A.numCols, alpha, A.values, lda,
+    val tid = Thread.currentThread().getId()
+    val startTime = System.currentTimeMillis()
+    val ret = nativeBLAS.dgemm(tAstr, tBstr, A.numRows, B.numCols, A.numCols, alpha, A.values, lda,
       B.values, ldb, beta, C.values, C.numRows)
+    val endTime = System.currentTimeMillis()
+    val diff = endTime - startTime
+    println(s"[OpenBlasgemm] TID:$tid:mode:openblas:compute:$diff:getresult:unknown:modeName:native")
+    ret
   }
 
   /**

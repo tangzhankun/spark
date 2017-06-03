@@ -2517,6 +2517,12 @@
         <curator.version>2.6.0</curator.version>
       </properties>
     </profile>
+   <profile>
+      <id>hadoop-3.0</id>
+      <properties>
+        <hadoop.version>3.0.0-alpha2-SNAPSHOT</hadoop.version>
+      </properties>
+    </profile>
 
     <profile>
       <id>yarn</id>
