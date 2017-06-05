@@ -419,47 +419,27 @@ private[spark] object BLAS extends Serializable with Logging {
     require(B.numCols == C.numCols,
       s"The columns of C don't match the columns of B. C: ${C.numCols}, A: ${B.numCols}")
 
-    // TODO: use DAAL
-
-    // Step1: Init the DAAL environment
-    /* Use the Environment class to switch the accelerator mode
-     If you need use FPGA+CPU mode,  choose "useFpgaBalanced"
-     If you need use FPGA-only mode, choose "useFpgaMax"
-     If you need use CPU-only mode,  choose "useCPU"*/
-    // logInfo(" [DAALgemm] Initial the DAAL environment")
     val context : DaalContext = new DaalContext()
     val a : java.lang.Double = 0.0
     val gemmAlgorithm : Batch = new Batch(context, a.getClass, Method.defaultDense)
-    //Environment.setAcceleratorMode( Environment.Accelerator.useFpgaBalanced)
-
-    // Step2: Convert the SPark Matrix into DAAL data structure
-    //println(s" [DAALgemm] Convert the input matrix A: ${A.numRows} * ${A.numCols}")
     val inputA:HomogenNumericTable = new HomogenNumericTable(
       context,
       A.values,
       A.numRows.toLong,
       A.numCols.toLong
     )
-
-    //println(s" [DAALgemm] Convert the input matrix B: ${B.numRows} * ${B.numCols}")
     val inputB:HomogenNumericTable  = new HomogenNumericTable(
       context,
       B.values,
       B.numRows.toLong,
       B.numCols.toLong
     )
-
     gemmAlgorithm.input.set(InputId.aMatrix, inputA)
     gemmAlgorithm.input.set(InputId.bMatrix, inputB)
-    //println(" [DAALgemm] Convert the transpose information, set to false")
     gemmAlgorithm.parameter.setTransposeA(false)
     gemmAlgorithm.parameter.setTransposeB(false)
-
-    //Step3: Calculate the result
-    //println(" [DAALgemm] Calculate the matrix multiplication")
     C.values = daalBLAS.dgemm(gemmAlgorithm)
     context.dispose()
-
   }
 
   /**

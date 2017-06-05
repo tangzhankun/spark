@@ -14,35 +14,38 @@ public class DaalBLAS {
   //private DaalContext context = new DaalContext();
   //private Batch gemmAlgorithm = new Batch(context, java.lang.Double.class, Method.defaultDense);
   private String mode;
-  private int threadCount = 1;
+//  private int threadCount = 1;
   private String modeName;
   public DaalBLAS(){
-    String tc = System.getenv("DAAL_TC");
-    if (tc != null && !tc.isEmpty()) {
-      this.threadCount = Integer.parseInt(tc);
-      Environment.setNumberOfThreads(this.threadCount);
-      System.out.println("[DAALgemm] thread count:" + this.threadCount);
-    } else {
-      Environment.setNumberOfThreads(Environment.getNumberOfThreads());
-    }
+//    String tc = System.getenv("DAAL_TC");
+//    if (tc != null && !tc.isEmpty()) {
+//      this.threadCount = Integer.parseInt(tc);
+//      Environment.setNumberOfThreads(this.threadCount);
+//      System.out.println("[DAALgemm] thread count:" + this.threadCount);
+//    } else {
+//      //System.out.println("[DAALgemm] thread count:" + Environment.getNumberOfThreads());
+//      //Environment.setNumberOfThreads(Environment.getNumberOfThreads());
+//    }
     this.mode = System.getenv("DAAL_MODE");
     if ("0".equals(mode)) {
-      //this.modeName = "useCpu";
+      this.modeName = "useCpu";
       Environment.setAcceleratorMode( Environment.AcceleratorMode.useCpu);
     } else if ("1".equals(mode)) {
-      //this.modeName = "useFpgaBalanced";
+      this.modeName = "useFpgaBalanced";
       Environment.setAcceleratorMode( Environment.AcceleratorMode.useFpgaBalanced);
     } else if ("2".equals(mode)){
-      //this.modeName = "useFpgaMax";
+      this.modeName = "useFpgaMax";
       Environment.setAcceleratorMode( Environment.AcceleratorMode.useFpgaMax);
     } else {
-      //this.modeName = "useCpu";
+      this.modeName = "useCpu";
       Environment.setAcceleratorMode( Environment.AcceleratorMode.useCpu);
     }
 
   }
 
   public double[] dgemm(Batch gemmAlgorithm){
+    String containerID = System.getenv("CONTAINER_ID");
+    String jvm_PID = System.getenv("JVM_PID");
     long threadId = Thread.currentThread().getId();
     long start_timestamp = System.currentTimeMillis();
     Result result = gemmAlgorithm.compute();
@@ -52,7 +55,7 @@ public class DaalBLAS {
     System.out.println("[DAALgemm] TID:" + threadId + ":mode:" + mode +
         ":compute:" + (end_compute_timestamp - start_timestamp) +
         ":getresult:" + (end_get_timestamp - end_compute_timestamp) +
-        ":modeName:" + this.modeName
+        ":modeName:" + this.modeName + ":JVMID:" + jvm_PID + ":containerID:" + containerID
     );
     return cMatrix.getDoubleArray();
   }
