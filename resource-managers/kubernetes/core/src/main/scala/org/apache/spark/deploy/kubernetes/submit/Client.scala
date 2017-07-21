@@ -94,6 +94,12 @@ private[spark] class Client(
         s" $SPARK_APP_ID_LABEL is not allowed as it is reserved for Spark bookkeeping" +
         s" operations.")
 
+    val driverCustomEnvs = sparkConf.getAllWithPrefix(KUBERNETES_DRIVER_ENV_KEY).toSeq
+      .map(env => new EnvVarBuilder()
+      .withName(env._1)
+      .withValue(env._2)
+      .build())
+
     val driverCustomAnnotations = ConfigurationUtils.combinePrefixedKeyValuePairsWithDeprecatedConf(
       sparkConf,
       KUBERNETES_DRIVER_ANNOTATION_PREFIX,
@@ -126,6 +132,7 @@ private[spark] class Client(
       .withImage(driverDockerImage)
       .withImagePullPolicy(dockerImagePullPolicy)
       .addToEnv(driverExtraClasspathEnv.toSeq: _*)
+      .addAllToEnv(driverCustomEnvs.asJava)
       .addNewEnv()
         .withName(ENV_DRIVER_MEMORY)
         .withValue(driverContainerMemoryWithOverhead + "m")
