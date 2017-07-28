@@ -75,9 +75,9 @@ private[spark] class BaseDriverConfigurationStep(
 
     val driverCustomEnvs = submissionSparkConf.getAllWithPrefix(KUBERNETES_DRIVER_ENV_KEY).toSeq
       .map(env => new EnvVarBuilder()
-      .withName(env._1)
-      .withValue(env._2)
-      .build())
+        .withName(env._1)
+        .withValue(env._2)
+        .build())
 
     val allDriverAnnotations = driverCustomAnnotations ++ Map(SPARK_APP_NAME_ANNOTATION -> appName)
     val nodeSelector = ConfigurationUtils.parsePrefixedKeyValuePairs(

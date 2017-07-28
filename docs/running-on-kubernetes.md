@@ -777,7 +777,7 @@ from the other deployment modes. See the [configuration page](configuration.html
   </td>
 </tr>
 <tr>
-  <td><code>spark.driverEnv.[EnvironmentVariableName]</code></td> 
+  <td><code>spark.kubernetes.driverEnv.[EnvironmentVariableName]</code></td> 
   <td>(none)</td>
   <td>
     Add the environment variable specified by <code>EnvironmentVariableName</code> to
