@@ -113,6 +113,8 @@ private[spark] class KubernetesClusterSchedulerBackend(
   private implicit val requestExecutorContext = ExecutionContext.fromExecutorService(
     ThreadUtils.newDaemonCachedThreadPool("kubernetes-executor-requests"))
 
+  private val executorFinalDeletionFlag = conf.get(kUBERNETES_EXECUTOR_FINALDELETION)
+
   private val driverPod = try {
     kubernetesClient.pods().inNamespace(kubernetesNamespace).
       withName(kubernetesDriverPodName).get()
@@ -272,8 +274,15 @@ private[spark] class KubernetesClusterSchedulerBackend(
     // When using Utils.tryLogNonFatalError some of the code fails but without any logs or
     // indication as to why.
     try {
+      logInfo(s"Enter stop()")
       RUNNING_EXECUTOR_PODS_LOCK.synchronized {
-        runningExecutorPods.values.foreach(kubernetesClient.pods().delete(_))
+        if (executorFinalDeletionFlag) {
+          logInfo(s"Delete all executor")
+          runningExecutorPods.values.foreach(kubernetesClient.pods().delete(_))
+        } else {
+          logInfo(s"Skip deletion of all executor")
+        }
+
         runningExecutorPods.clear()
       }
       EXECUTOR_PODS_BY_IPS_LOCK.synchronized {
@@ -432,6 +441,7 @@ private[spark] class KubernetesClusterSchedulerBackend(
         .endOwnerReference()
       .endMetadata()
       .withNewSpec()
+        .withRestartPolicy("Never") // DEBUG executor
         .withHostname(hostname)
         .addNewContainer()
           .withName(s"executor")

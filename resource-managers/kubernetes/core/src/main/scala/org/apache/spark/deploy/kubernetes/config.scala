@@ -136,6 +136,12 @@ package object config extends Logging {
 
   private[spark] val KUBERNETES_DRIVER_ENV_KEY = "spark.kubernetes.driverEnv."
 
+  private[spark] val kUBERNETES_EXECUTOR_FINALDELETION =
+    ConfigBuilder("spark.kubernetes.executor.finalDeletion")
+      .doc("whether to delete executors after job finish")
+      .booleanConf
+      .createWithDefault(true)
+
   private[spark] val KUBERNETES_EXECUTOR_LABELS =
     ConfigBuilder("spark.kubernetes.executor.labels")
       .doc("Custom labels that will be added to the executor pods. This should be a" +

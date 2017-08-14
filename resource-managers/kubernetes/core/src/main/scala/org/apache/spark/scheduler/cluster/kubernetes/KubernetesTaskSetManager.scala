@@ -18,8 +18,9 @@ package org.apache.spark.scheduler.cluster.kubernetes
 
 import java.net.InetAddress
 
-import scala.collection.mutable.ArrayBuffer
+import org.apache.log4j.Logger
 
+import scala.collection.mutable.ArrayBuffer
 import org.apache.spark.scheduler.{TaskSchedulerImpl, TaskSet, TaskSetManager}
 
 private[spark] class KubernetesTaskSetManager(
@@ -58,13 +59,16 @@ private[spark] class KubernetesTaskSetManager(
               s"$executorIP using cluster node IP $clusterNodeIP")
             pendingTasksClusterNodeIP
           } else {
-            val clusterNodeFullName = inetAddressUtil.getFullHostName(clusterNodeIP)
-            val pendingTasksClusterNodeFullName = super.getPendingTasksForHost(clusterNodeFullName)
-            if (pendingTasksClusterNodeFullName.nonEmpty) {
-              logDebug(s"Got preferred task list $pendingTasksClusterNodeFullName " +
-                s"for executor host $executorIP using cluster node full name $clusterNodeFullName")
-            }
-            pendingTasksClusterNodeFullName
+//            val clusterNodeFullName = inetAddressUtil.getFullHostName(clusterNodeIP)
+//            logInfo(s"IP: $clusterNodeIP is useless, try fullname: $clusterNodeFullName")
+//            val pendingTasksClusterNodeFullName = super.getPendingTasksForHost(clusterNodeFullName)
+//            if (pendingTasksClusterNodeFullName.nonEmpty) {
+//              logInfo(s"Got preferred task list $pendingTasksClusterNodeFullName " +
+//                s"for executor host $executorIP using cluster node full name $clusterNodeFullName")
+//            }
+//            logInfo(s"fullname: $clusterNodeFullName is useless")
+//            pendingTasksClusterNodeFullName
+            pendingTasksClusterNodeIP
           }
         }
       } else {
@@ -76,7 +80,6 @@ private[spark] class KubernetesTaskSetManager(
 
 // To support mocks in unit tests.
 private[kubernetes] class InetAddressUtil {
-
   // NOTE: This does issue a network call to DNS. Caching is done internally by the InetAddress
   // class for both hits and misses.
   def getFullHostName(ipAddress: String): String = {

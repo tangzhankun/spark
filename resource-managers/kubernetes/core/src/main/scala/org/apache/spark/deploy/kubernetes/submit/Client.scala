@@ -19,10 +19,10 @@ package org.apache.spark.deploy.kubernetes.submit
 import java.io.File
 import java.util.{Collections, UUID}
 
-import io.fabric8.kubernetes.api.model.{ContainerBuilder, EnvVarBuilder, OwnerReferenceBuilder, PodBuilder, QuantityBuilder}
+import io.fabric8.kubernetes.api.model._
 import io.fabric8.kubernetes.client.KubernetesClient
-import scala.collection.JavaConverters._
 
+import scala.collection.JavaConverters._
 import org.apache.spark.SparkConf
 import org.apache.spark.deploy.kubernetes.{ConfigurationUtils, SparkKubernetesClientFactory}
 import org.apache.spark.deploy.kubernetes.config._
@@ -150,7 +150,9 @@ private[spark] class Client(
         .addToRequests("memory", driverMemoryQuantity)
         .addToLimits("memory", driverMemoryLimitQuantity)
         .endResources()
+      .addNewVolumeMount("/tmp/jstack", "jstack-volume", false, "")
       .build()
+
     val basePod = new PodBuilder()
       .withNewMetadata()
         .withName(kubernetesDriverPodName)
@@ -161,6 +163,11 @@ private[spark] class Client(
       .withNewSpec()
         .withRestartPolicy("Never")
         .addToContainers(driverContainer)
+        .addNewVolume()
+          .withName("jstack-volume")
+          .withHostPath(
+            new HostPathVolumeSourceBuilder().withPath("/tmp/").build())
+        .endVolume()
         .endSpec()
 
     driverLimitCores.map {
