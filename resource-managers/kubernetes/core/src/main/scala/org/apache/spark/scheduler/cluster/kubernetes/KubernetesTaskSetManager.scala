@@ -58,13 +58,14 @@ private[spark] class KubernetesTaskSetManager(
               s"$executorIP using cluster node IP $clusterNodeIP")
             pendingTasksClusterNodeIP
           } else {
-            val clusterNodeFullName = inetAddressUtil.getFullHostName(clusterNodeIP)
-            val pendingTasksClusterNodeFullName = super.getPendingTasksForHost(clusterNodeFullName)
-            if (pendingTasksClusterNodeFullName.nonEmpty) {
-              logDebug(s"Got preferred task list $pendingTasksClusterNodeFullName " +
-                s"for executor host $executorIP using cluster node full name $clusterNodeFullName")
-            }
-            pendingTasksClusterNodeFullName
+//            val clusterNodeFullName = inetAddressUtil.getFullHostName(clusterNodeIP)
+//            val pendingTasksClusterNodeFullName = super.getPendingTasksForHost(clusterNodeFullName)
+//            if (pendingTasksClusterNodeFullName.nonEmpty) {
+//              logDebug(s"Got preferred task list $pendingTasksClusterNodeFullName " +
+//                s"for executor host $executorIP using cluster node full name $clusterNodeFullName")
+//            }
+//            pendingTasksClusterNodeFullName
+            pendingTasksExecutorIP
           }
         }
       } else {
