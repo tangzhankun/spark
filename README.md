@@ -11,7 +11,7 @@ FPGA on Yarn is required here, please clone and install it first.
 
 Build spark on yarn
 
-	./build/mvn -Pyarn -Phadoop-3.0 -Dhadoop.version=3.0.0-alpha3-SNAPSHOT -DskipTests clean package
+	./build/mvn -Pyarn -Phadoop-3.1 -Dhadoop.version=3.1.0-SNAPSHOT -DskipTests clean package
 
 ## Usage
 
