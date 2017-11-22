@@ -137,19 +137,22 @@ private[yarn] class YarnAllocator(
   protected val executorFpgaType = sparkConf.get(EXECUTOR_FPGA_TYPE)
   protected val executorFpgaIps = sparkConf.get(EXECUTOR_FPGA_IP)
   protected val executorFpgaShare = sparkConf.get(EXECUTOR_FPGA_SHARE)
-  logInfo("yuqiang: fpgaType " + executorFpgaType + " fpgaIps " + executorFpgaIps + " fpgaShare " + executorFpgaShare)
+  protected val executorFpgaCount = sparkConf.get(EXECUTOR_FPGA_COUNT)
 
-  private val fpgaSlots = new util.HashSet[FPGASlot]()
-  val fpgaIps = executorFpgaIps.split(",")
-  for(fpgaIp <- fpgaIps) {
-    val fpgaIpArr = fpgaIp.split(":")
-    val count = fpgaIpArr(1).toInt
-    for(i <- 1 to count) {
-      fpgaSlots.add(FPGASlot.newInstance(FPGAType.valueOf(executorFpgaType), UUID.randomUUID().toString, fpgaIpArr(0)))
-    }
-  }
-  private[yarn] val resource = Resource.newInstance(executorMemory + memoryOverhead, executorCores, fpgaSlots)
+  logInfo("yuqiang: fpgaType " + executorFpgaType + " fpgaIps " + executorFpgaIps + " fpgaShare " + executorFpgaShare +
+  "fpga count:" + executorFpgaCount)
 
+//  private val fpgaSlots = new util.HashSet[FPGASlot]()
+//  val fpgaIps = executorFpgaIps.split(",")
+//  for(fpgaIp <- fpgaIps) {
+//    val fpgaIpArr = fpgaIp.split(":")
+//    val count = fpgaIpArr(1).toInt
+//    for(i <- 1 to count) {
+//      fpgaSlots.add(FPGASlot.newInstance(FPGAType.valueOf(executorFpgaType), UUID.randomUUID().toString, fpgaIpArr(0)))
+//    }
+//  }
+  private[yarn] val resource = Resource.newInstance(executorMemory + memoryOverhead, executorCores)
+  resource.setResourceValue("yarn.io/fpga", executorFpgaCount)
   private val launcherPool = ThreadUtils.newDaemonCachedThreadPool(
     "ContainerLauncher", sparkConf.get(CONTAINER_LAUNCH_MAX_THREADS))
 

@@ -45,7 +45,7 @@ abstract class BaseYarnClusterSuite
   // log4j configuration for the YARN containers, so that their output is collected
   // by YARN instead of trying to overwrite unit-tests.log.
   protected val LOG4J_CONF = """
-    |log4j.rootCategory=DEBUG, console
+    |log4j.rootCategory=INFO, console
     |log4j.appender.console=org.apache.log4j.ConsoleAppender
     |log4j.appender.console.target=System.err
     |log4j.appender.console.layout=org.apache.log4j.PatternLayout

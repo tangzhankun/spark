@@ -356,6 +356,11 @@ package object config {
     .stringConf
     .createWithDefault("")
 
+  private[spark] val EXECUTOR_FPGA_COUNT = ConfigBuilder("spark.executor.fpga.count")
+    .internal()
+    .intConf
+    .createWithDefault(0)
+
   private[spark] val EXECUTOR_FPGA_SHARE = ConfigBuilder("spark.executor.fpga.share")
     .booleanConf
     .createWithDefault(false)
