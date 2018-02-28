@@ -43,13 +43,13 @@ class FPGAJsonParser(
     jp
   }
 
-  private def initJniParser2: JniParser2 = {
-    val jp2 = new JniParser2
+  private def initJniParser2: FpgaJsonParserImpl = {
+    val jp2 = new FpgaJsonParserImpl
     jp2.setSchema(jniFields, jniTypeArray)
     jp2
   }
 
-  val convertedRow = new UnsafeRow()
+  val convertedRow = new UnsafeRow(schema.length)
 
   private def jniConverter(buf: Array[Byte], offset: Int, length: Int): UnsafeRow = {
     convertedRow.pointTo(buf, Unsafe.ARRAY_BYTE_BASE_OFFSET + offset, length)
@@ -105,6 +105,12 @@ class FPGAJsonParser(
             currentPos += 4
             val rowOffset = currentPos
             currentPos += rowSize
+            // TODO
+            // scalastyle:off
+            println("------decoded bytes---------")
+            byteArray.foreach(b => print(b.toInt + ","))
+            println("-------------------")
+            // scalastyle:on
             jniConverter(byteArray, rowOffset, rowSize)
           }
         }
@@ -115,7 +121,7 @@ class FPGAJsonParser(
 }
 
 private object FPGAJsonParser {
-  System.loadLibrary("JniParser")
+  System.loadLibrary("FpgaJsonParserImpl")
 
   private val boolean = 1
   private val short = 2
@@ -157,9 +163,10 @@ class JniParser extends Closeable {
   @native def close(): Unit
 }
 
-class JniParser2 extends Closeable {
+class FpgaJsonParserImpl extends Closeable {
   // -- Native methods
   @native def setSchema(schemaFieldNames: String, schemaFieldTypes: Array[Int]): Boolean
   @native def parseJson(s: String): Array[Byte]
+  @native def parseJson2(s: String): Long
   @native def close(): Unit
 }

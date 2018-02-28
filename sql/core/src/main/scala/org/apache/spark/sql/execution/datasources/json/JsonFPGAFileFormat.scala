@@ -47,6 +47,8 @@ class JsonFPGAFileFormat extends JsonFileFormat {
 
   override def equals(other: Any): Boolean = other.isInstanceOf[JsonFPGAFileFormat]
 
+  override def hashCode(): Int = super.hashCode()
+  
   override def buildReader(
       sparkSession: SparkSession,
       dataSchema: StructType,
@@ -76,7 +78,7 @@ class JsonFPGAFileFormat extends JsonFileFormat {
 
     (file: PartitionedFile) => {
       val parser = new FPGAJsonParser(actualSchema, parsedOptions)
-      JsonFPGADataSource(parsedOptions).readFile(
+      JsonFPGADataSource(parsedOptions).readFile2(
         broadcastedHadoopConf.value.value,
         file,
         parser,
