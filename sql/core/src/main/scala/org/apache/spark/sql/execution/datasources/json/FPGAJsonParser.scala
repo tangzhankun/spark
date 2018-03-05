@@ -60,6 +60,15 @@ class FPGAJsonParser(
   private val jniTypeArray =
     schema.map(field => FPGAJsonParser.typeConverter(field.dataType)).toArray
 
+  // only support maximum 4 fields( double/String). String with fixed length 128 bytes
+  // DDDD 40 bytes
+  // DDDS 168 bytes
+  // DDSS 296 bytes
+  // DSSS 424 bytes
+  // SSSS 552 bytes
+  private val constRowSize = jniTypeArray.filter((e : Int) => e == 7).size * 128 + 24
+  println(s"const row size: $constRowSize")
+
   def parseText(
       record: Text,
       recordLiteral: Text => UTF8String): Seq[InternalRow] = {
@@ -101,8 +110,9 @@ class FPGAJsonParser(
           private var currentPos = 0
           override def hasNext: Boolean = currentPos < byteArray.length
           override def next(): InternalRow = {
-            val rowSize = Platform.getInt(byteArray, Unsafe.ARRAY_BYTE_BASE_OFFSET + currentPos)
-            currentPos += 4
+            // val rowSize = Platform.getInt(byteArray, Unsafe.ARRAY_BYTE_BASE_OFFSET + currentPos)
+            // currentPos += 4
+            val rowSize = constRowSize
             val rowOffset = currentPos
             currentPos += rowSize
             // TODO
