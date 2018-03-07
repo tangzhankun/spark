@@ -71,10 +71,12 @@ class FPGAJsonParser(
   // DDSS 296 bytes
   // DSSS 424 bytes
   // SSSS 552 bytes
-  private val constRowSize = jniTypeArray.count((e: Int) => e match {
+  private val stringFieldCount = jniTypeArray.count((e: Int) => e match {
     case 7 => true
     case _ => false
-  }) * 128 + 24
+  })
+
+  private val constRowSize = stringFieldCount * (128 + 8) + 8*(4-stringFieldCount) + 8
 
   println(s"const row size: $constRowSize")
 
