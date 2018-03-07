@@ -56,6 +56,11 @@ class FPGAJsonParser(
     convertedRow
   }
 
+  private def jniConverter2(addr: Long, length: Int): UnsafeRow = {
+    convertedRow.pointTo(null, addr, length)
+    convertedRow
+  }
+
   private val jniFields = schema.map(field => field.name).mkString(",")
   private val jniTypeArray =
     schema.map(field => FPGAJsonParser.typeConverter(field.dataType)).toArray
@@ -66,7 +71,11 @@ class FPGAJsonParser(
   // DDSS 296 bytes
   // DSSS 424 bytes
   // SSSS 552 bytes
-  private val constRowSize = jniTypeArray.filter((e : Int) => e == 7).size * 128 + 24
+  private val constRowSize = jniTypeArray.count((e: Int) => e match {
+    case 7 => true
+    case _ => false
+  }) * 128 + 24
+
   println(s"const row size: $constRowSize")
 
   def parseText(
@@ -128,6 +137,56 @@ class FPGAJsonParser(
     }
     // should throw [[[BadRecordException]]] in parser if failed
   }
+  def arrayToTuple(arrs : Array[Long]) : (Long, Long) = {
+    arrs match {
+      case Array(buff_addr, buff_size) => {
+        println(s"addr:$buff_addr, size: $buff_size")
+        (buff_addr, buff_size)
+      }
+      case _ => {
+        println("wrong return value from FPGAJsonParser's native method")
+        (-1, 0)
+      }
+    }
+  }
+  def parseFileWithBufferAddr(
+                 records: Iterator[Text],
+                 recordLiteral: Text => UTF8String): Iterator[InternalRow] = {
+    Utils.tryWithResource(initJniParser2) { parser =>
+      FPGAJsonParser.recordsToChunks(records).map((x : String) =>
+        arrayToTuple(parser.parseJson2(x))).flatMap {
+        case (-1, _) => Nil.toIterator
+        case (0, _) => Nil.toIterator
+        case (_, 0) => {
+          println("bufer size is 0! unknown error!")
+          Nil.toIterator
+        }
+        case (buff_addr, buff_size) => new Iterator[InternalRow] {
+          private var cnt = 0
+          private val max = buff_size
+          override def hasNext: Boolean = {
+            cnt*constRowSize < max
+          }
+          override def next(): InternalRow = {
+            val rowSize = constRowSize
+            val rowOffset = buff_addr + constRowSize * cnt
+            cnt += 1
+            // TODO
+            // scalastyle:off
+            println(s"------count:$cnt, decoded $constRowSize bytes from address $rowOffset (max:$max) ---------")
+            val p = rowOffset;
+            for (p <- rowOffset to rowOffset +rowSize) {
+              print(Platform.getByte(null, p) + ",")
+            }
+            println("-------------------")
+            // scalastyle:on
+            jniConverter2(rowOffset, rowSize)
+          }
+        }
+      }
+    }
+    // should throw [[[BadRecordException]]] in parser if failed
+  }
 }
 
 private object FPGAJsonParser {
@@ -177,6 +236,7 @@ class FpgaJsonParserImpl extends Closeable {
   // -- Native methods
   @native def setSchema(schemaFieldNames: String, schemaFieldTypes: Array[Int]): Boolean
   @native def parseJson(s: String): Array[Byte]
-  @native def parseJson2(s: String): Long
+  // should have only two elements. The first long is buffer address, second one is buffer size
+  @native def parseJson2(s: String): Array[Long]
   @native def close(): Unit
 }
