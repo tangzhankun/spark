@@ -78,7 +78,7 @@ class FPGAJsonParser(
 
   private val constRowSize = stringFieldCount * (128 + 8) + 8*(4-stringFieldCount) + 8
 
-  println(s"const row size: $constRowSize")
+  //println(s"const row size: $constRowSize")
 
   def parseText(
       record: Text,
@@ -128,9 +128,9 @@ class FPGAJsonParser(
             currentPos += rowSize
             // TODO
             // scalastyle:off
-            println("------decoded bytes---------")
-            byteArray.foreach(b => print(b.toInt + ","))
-            println("-------------------")
+            //println("------decoded bytes---------")
+            //byteArray.foreach(b => print(b.toInt + ","))
+            //println("-------------------")
             // scalastyle:on
             jniConverter(byteArray, rowOffset, rowSize)
           }
@@ -142,11 +142,11 @@ class FPGAJsonParser(
   def arrayToTuple(arrs : Array[Long]) : (Long, Long) = {
     arrs match {
       case Array(buff_addr, buff_size) => {
-        println(s"addr:$buff_addr, size: $buff_size")
+        //println(s"addr:$buff_addr, size: $buff_size")
         (buff_addr, buff_size)
       }
       case _ => {
-        println("wrong return value from FPGAJsonParser's native method")
+        //println("wrong return value from FPGAJsonParser's native method")
         (-1, 0)
       }
     }
@@ -175,12 +175,12 @@ class FPGAJsonParser(
             cnt += 1
             // TODO
             // scalastyle:off
-            println(s"------count:$cnt, decoded $constRowSize bytes from address $rowOffset (max:$max) ---------")
-            val p = rowOffset;
-            for (p <- rowOffset to rowOffset +rowSize) {
-              print(Platform.getByte(null, p) + ",")
-            }
-            println("-------------------")
+            //println(s"------count:$cnt, decoded $constRowSize bytes from address $rowOffset (max:$max) ---------")
+            //val p = rowOffset;
+            //for (p <- rowOffset to rowOffset +rowSize) {
+            //  print(Platform.getByte(null, p) + ",")
+            //}
+            //println("-------------------")
             // scalastyle:on
             jniConverter2(rowOffset, rowSize)
           }
