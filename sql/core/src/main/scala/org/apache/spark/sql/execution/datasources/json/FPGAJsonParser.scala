@@ -202,7 +202,7 @@ private object FPGAJsonParser {
   private val double = 6
   private val string = 7
 
-  private val MAX_LINES = 1024 * 128
+  private val MAX_LINES = 10000000
   def typeConverter(dt: DataType): Int = dt match {
     case BooleanType => boolean
     case ShortType => short
