@@ -189,6 +189,42 @@ class FPGAJsonParser(
     }
     // should throw [[[BadRecordException]]] in parser if failed
   }
+
+  def parseFileWithFileNameAndGetAddress(
+                               filePath : String): Iterator[InternalRow] = {
+    val parser = initJniParser2
+    arrayToTuple(parser.parseJson3(filePath)) match {
+      case (-1, _) => Nil.toIterator
+      case (0, _) => Nil.toIterator
+      case (_, 0) => {
+        println("bufer size is 0! unknown error!")
+        Nil.toIterator
+      }
+      case (buff_addr, buff_size) => new Iterator[InternalRow] {
+        private var cnt = 0
+        private val max = buff_size
+        override def hasNext: Boolean = {
+          cnt*constRowSize < max
+        }
+        override def next(): InternalRow = {
+          val rowSize = constRowSize
+          val rowOffset = buff_addr + constRowSize * cnt
+          cnt += 1
+          // TODO
+          // scalastyle:off
+          //println(s"------count:$cnt, decoded $constRowSize bytes from address $rowOffset (max:$max) ---------")
+          //val p = rowOffset;
+          //for (p <- rowOffset to rowOffset +rowSize) {
+          //  print(Platform.getByte(null, p) + ",")
+          //}
+          //println("-------------------")
+          // scalastyle:on
+          jniConverter2(rowOffset, rowSize)
+        }
+      }
+    }
+    // should throw [[[BadRecordException]]] in parser if failed
+  }
 }
 
 private object FPGAJsonParser {
@@ -240,5 +276,7 @@ class FpgaJsonParserImpl extends Closeable {
   @native def parseJson(s: String): Array[Byte]
   // should have only two elements. The first long is buffer address, second one is buffer size
   @native def parseJson2(s: String): Array[Long]
+  // pass a file path, return buffer address and buffer size
+  @native def parseJson3(s: String): Array[Long]
   @native def close(): Unit
 }

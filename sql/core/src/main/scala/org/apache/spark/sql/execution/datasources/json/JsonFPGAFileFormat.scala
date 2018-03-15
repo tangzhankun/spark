@@ -41,6 +41,7 @@ class JsonFPGAFileFormat extends JsonFileFormat {
       sparkSession.sessionState.conf.columnNameOfCorruptRecord)
     val jsonFPGADataSource = JsonFPGADataSource(parsedOptions)
     jsonFPGADataSource.isSplitable && super.isSplitable(sparkSession, options, path)
+    false
   }
 
   override def toString: String = "JSON_FPGA"
