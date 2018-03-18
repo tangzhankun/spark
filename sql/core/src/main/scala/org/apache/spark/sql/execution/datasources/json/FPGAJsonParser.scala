@@ -75,10 +75,13 @@ class FPGAJsonParser(
     case 7 => true
     case _ => false
   })
+  private var limitedStringCount = stringFieldCount
+  if (stringFieldCount > 4) {
+    limitedStringCount = 4
+  }
+  private val constRowSize = limitedStringCount * (128 + 8) + 8*(4-limitedStringCount) + 8
 
-  private val constRowSize = stringFieldCount * (128 + 8) + 8*(4-stringFieldCount) + 8
-
-  //println(s"const row size: $constRowSize")
+  println(s"const row size: $constRowSize")
 
   def parseText(
       record: Text,
@@ -212,12 +215,12 @@ class FPGAJsonParser(
           cnt += 1
           // TODO
           // scalastyle:off
-          //println(s"------count:$cnt, decoded $constRowSize bytes from address $rowOffset (max:$max) ---------")
-          //val p = rowOffset;
-          //for (p <- rowOffset to rowOffset +rowSize) {
-          //  print(Platform.getByte(null, p) + ",")
-          //}
-          //println("-------------------")
+          println(s"------count:$cnt, decoded $constRowSize bytes from address $rowOffset (max:$max) ---------")
+          val p = rowOffset;
+          for (p <- rowOffset to rowOffset +rowSize) {
+            print(Platform.getByte(null, p) + ",")
+          }
+          println("-------------------")
           // scalastyle:on
           jniConverter2(rowOffset, rowSize)
         }
