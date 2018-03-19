@@ -16,6 +16,8 @@
  */
 package org.apache.spark.examples.sql
 
+import java.io.File
+
 import com.fasterxml.jackson.core.{JsonFactory, JsonParser}
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.catalyst.json.{CreateJacksonParser, JSONOptions, JacksonParser}
@@ -54,12 +56,14 @@ object SparkSQLExample {
 //    runInferSchemaExample(spark)
 //    runProgrammaticSchemaExample(spark)
 
-    CPUJSONPerformance(spark, "/root/customer_support/WASAI/performance/10-5row.json")
+    CPUJSONPerformance(spark, args(0).toString)
     spark.stop()
   }
 
   def CPUJSONPerformance(spark: SparkSession, filePath: String): Unit = {
     println("Evaluating the CPU maximum throughput with schema of " + filePath)
+    val someFile = new File(filePath)
+    val fileSize = someFile.length()
     val smallDF = spark.read.format("json").load(filePath)
     val actulSchema = smallDF.schema
     val extraOptions = new scala.collection.mutable.HashMap[String, String]
@@ -70,11 +74,13 @@ object SparkSQLExample {
     val rawParser = new JacksonParser(actulSchema, parsedOptions)
     val createParserFunction = createParser _
     val stringArray = smallDF.toJSON.collect()
-
+    val start_time = System.currentTimeMillis()
     stringArray.foreach((s: String) => {
       rawParser.parse(s, createParserFunction, UTF8String.fromString)
     })
-
+    val end_time = System.currentTimeMillis()
+    println("CPU JSON performance costs: " + (end_time - start_time) + " ms, throughput is " +
+      fileSize*1000/(end_time - start_time)/1024/1024 + " M/s")
   }
   def createParser(jsonFactory: JsonFactory, record: String): JsonParser = {
     jsonFactory.createParser(record)
