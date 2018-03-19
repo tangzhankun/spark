@@ -30,7 +30,7 @@ import org.apache.spark.sql.catalyst.util._
  *
  * Most of these map directly to Jackson's internal options, specified in [[JsonParser.Feature]].
  */
-private[sql] class JSONOptions(
+class JSONOptions(
     @transient private val parameters: CaseInsensitiveMap[String],
     defaultTimeZoneId: String,
     defaultColumnNameOfCorruptRecord: String)

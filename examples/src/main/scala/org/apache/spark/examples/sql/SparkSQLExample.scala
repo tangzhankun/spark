@@ -16,7 +16,10 @@
  */
 package org.apache.spark.examples.sql
 
+import com.fasterxml.jackson.core.{JsonFactory, JsonParser}
 import org.apache.spark.sql.Row
+import org.apache.spark.sql.catalyst.json.{CreateJacksonParser, JSONOptions, JacksonParser}
+import org.apache.spark.unsafe.types.UTF8String
 // $example on:init_session$
 import org.apache.spark.sql.SparkSession
 // $example off:init_session$
@@ -46,14 +49,36 @@ object SparkSQLExample {
     import spark.implicits._
     // $example off:init_session$
 
-    runBasicDataFrameExample(spark)
-    runDatasetCreationExample(spark)
-    runInferSchemaExample(spark)
-    runProgrammaticSchemaExample(spark)
+//    runBasicDataFrameExample(spark)
+//    runDatasetCreationExample(spark)
+//    runInferSchemaExample(spark)
+//    runProgrammaticSchemaExample(spark)
 
+    CPUJSONPerformance(spark, "/root/customer_support/WASAI/performance/10-5row.json")
     spark.stop()
   }
 
+  def CPUJSONPerformance(spark: SparkSession, filePath: String): Unit = {
+    println("Evaluating the CPU maximum throughput with schema of " + filePath)
+    val smallDF = spark.read.format("json").load(filePath)
+    val actulSchema = smallDF.schema
+    val extraOptions = new scala.collection.mutable.HashMap[String, String]
+    val parsedOptions = new JSONOptions(
+      extraOptions.toMap,
+      spark.sessionState.conf.sessionLocalTimeZone,
+      spark.sessionState.conf.columnNameOfCorruptRecord)
+    val rawParser = new JacksonParser(actulSchema, parsedOptions)
+    val createParserFunction = createParser _
+    val stringArray = smallDF.toJSON.collect()
+
+    stringArray.foreach((s: String) => {
+      rawParser.parse(s, createParserFunction, UTF8String.fromString)
+    })
+
+  }
+  def createParser(jsonFactory: JsonFactory, record: String): JsonParser = {
+    jsonFactory.createParser(record)
+  }
   private def runBasicDataFrameExample(spark: SparkSession): Unit = {
     // $example on:create_df$
     val df = spark.read.json("examples/src/main/resources/people.json")
