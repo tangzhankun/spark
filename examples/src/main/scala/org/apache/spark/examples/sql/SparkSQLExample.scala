@@ -62,6 +62,7 @@ object SparkSQLExample {
 
   def CPUJSONPerformance(spark: SparkSession, filePath: String): Unit = {
     println("Evaluating the CPU maximum throughput with schema of " + filePath)
+    util.Random.nextInt().toLong
     val someFile = new File(filePath)
     val fileSize = someFile.length()
     val smallDF = spark.read.format("json").load(filePath)
