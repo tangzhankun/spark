@@ -213,6 +213,7 @@ final class DataStreamReader private[sql](sparkSession: SparkSession) extends Lo
    */
   def json(path: String): DataFrame = format("json").load(path)
 
+  def json(path: String, formatString: String): DataFrame = format(formatString).load(path)
   /**
    * Loads a CSV file stream and returns the result as a `DataFrame`.
    *
