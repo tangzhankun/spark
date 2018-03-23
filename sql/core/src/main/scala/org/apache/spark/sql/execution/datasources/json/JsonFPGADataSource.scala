@@ -87,7 +87,8 @@ object TextInputJsonFPGADataSource extends JsonFPGADataSource {
     val linesReader = new HadoopFileLinesReader(file, conf)
     Option(TaskContext.get()).foreach(_.addTaskCompletionListener(_ => linesReader.close()))
     // TODO failure handle
-    parser.parseFileWithFileNameAndGetAddress(file.filePath)
+    val theFilePath = file.filePath.substring(7)
+    parser.parseFileWithFileNameAndGetAddress(theFilePath)
   }
 
   private def textToUTF8String(value: Text): UTF8String = {
