@@ -80,7 +80,7 @@ object SparkSQLExample {
     })
     val end_time = System.currentTimeMillis()
     println("CPU JSON performance costs: " + (end_time - start_time) + " ms, throughput is " +
-      fileSize*1000/(end_time - start_time)/1024/1024 + " M/s")
+      fileSize*1000.toDouble/(end_time - start_time)/1024.toDouble/1024.toDouble + " M/s")
   }
   def createParser(jsonFactory: JsonFactory, record: String): JsonParser = {
     jsonFactory.createParser(record)
