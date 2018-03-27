@@ -66,7 +66,13 @@ object SparkSQLExample {
     val someFile = new File(filePath)
     val fileSize = someFile.length()
     val smallDF = spark.read.format("json").load(filePath)
-    val actulSchema = smallDF.schema
+    // val actulSchema = smallDF.schema
+    val actulSchema = StructType(
+      StructField("ACC_NBR", StringType, true) ::
+        StructField("OBILLING_TID", StringType, true) ::
+        StructField("NBILLING_TID", StringType, true) ::
+        StructField("OPER_TID", StringType, true) :: Nil
+    )
     val extraOptions = new scala.collection.mutable.HashMap[String, String]
     val parsedOptions = new JSONOptions(
       extraOptions.toMap,
