@@ -82,6 +82,15 @@ class CreateTableAsSelectSuite
     }
   }
 
+  test("test- zhankun") {
+    val smallDF = spark.read.json("/root/customer_support/WASAI/performance/100-row-37col.json")
+    smallDF.createOrReplaceTempView("people")
+    val sqlStr = "select count(OPER_TID), count(NBILLING_TID)," +
+      " count(OBILLING_TID), count(ACC_NBR) from people"
+    val sqlDF = spark.sql(sqlStr)
+    sqlDF.show()
+  }
+
   test("CREATE TABLE USING AS SELECT based on the file without write permission") {
     // setWritable(...) does not work on Windows. Please refer JDK-6728842.
     assume(!Utils.isWindows)
