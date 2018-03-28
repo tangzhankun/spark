@@ -212,12 +212,12 @@ class FPGAJsonParser(
           cnt += 1
           // TODO
           // scalastyle:off
-          //println(s"------count:$cnt, decoded $constRowSize bytes from address $rowOffset (max:$max) ---------")
-          //val p = rowOffset;
-          //for (p <- rowOffset to rowOffset +rowSize) {
-          //  print(Platform.getByte(null, p) + ",")
-          //}
-          //println("-------------------")
+          println(s"------count:$cnt, decoded $constRowSize bytes from address $rowOffset (max:$max) ---------")
+          val p = rowOffset;
+          for (p <- rowOffset to rowOffset +rowSize) {
+            print(Platform.getByte(null, p) + ",")
+          }
+          println("-------------------")
           // scalastyle:on
           jniConverter2(rowOffset, rowSize)
         }
