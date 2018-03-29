@@ -17,6 +17,8 @@
 package org.apache.spark.examples.sql
 
 import java.io.File
+import java.text.SimpleDateFormat
+import java.util.Calendar
 
 import com.fasterxml.jackson.core.{JsonFactory, JsonParser}
 import org.apache.spark.sql.Row
@@ -56,11 +58,11 @@ object SparkSQLExample {
 //    runInferSchemaExample(spark)
 //    runProgrammaticSchemaExample(spark)
 
-    CPUJSONPerformance(spark, args(0).toString)
+    CPUJSONPerformance(spark, args(0).toString, args(1).toBoolean)
     spark.stop()
   }
 
-  def CPUJSONPerformance(spark: SparkSession, filePath: String): Unit = {
+  def CPUJSONPerformance(spark: SparkSession, filePath: String, ifWarmup: Boolean): Unit = {
     println("Evaluating the CPU maximum throughput with schema of " + filePath)
     util.Random.nextInt().toLong
     val someFile = new File(filePath)
@@ -81,13 +83,25 @@ object SparkSQLExample {
     val rawParser = new JacksonParser(actulSchema, parsedOptions)
     val createParserFunction = createParser _
     val stringArray = smallDF.toJSON.collect()
+    val format = new SimpleDateFormat("h-m-s-")
+    if (ifWarmup) {
+      val warm_start_time = System.currentTimeMillis()
+      println("-----warm up begin:" + format.format(Calendar.getInstance().getTime()) + "-----")
+      stringArray.foreach((s: String) => {
+        rawParser.parse(s, createParserFunction, UTF8String.fromString)
+      })
+      println("Warm up end. It costs: " + (System.currentTimeMillis() - warm_start_time) + " ms")
+    }
     val start_time = System.currentTimeMillis()
+    println("-----start time:" + format.format(Calendar.getInstance().getTime()) + "-----")
     stringArray.foreach((s: String) => {
       rawParser.parse(s, createParserFunction, UTF8String.fromString)
     })
     val end_time = System.currentTimeMillis()
+    println("-----end time:" + format.format(Calendar.getInstance().getTime()) + "-----")
     println("CPU JSON performance costs: " + (end_time - start_time) + " ms, throughput is " +
       fileSize*1000.toDouble/(end_time - start_time)/1024.toDouble/1024.toDouble + " M/s")
+    Thread.sleep(5000)
   }
   def createParser(jsonFactory: JsonFactory, record: String): JsonParser = {
     jsonFactory.createParser(record)
