@@ -16,7 +16,7 @@
  */
 package org.apache.spark.examples.sql
 
-import java.io.File
+import java.io.{BufferedWriter, File, FileWriter}
 import java.text.SimpleDateFormat
 import java.util.Calendar
 
@@ -64,7 +64,10 @@ object SparkSQLExample {
 
   def CPUJSONPerformance(spark: SparkSession, filePath: String, ifWarmup: Boolean): Unit = {
     println("Evaluating the CPU maximum throughput with schema of " + filePath)
-    util.Random.nextInt().toLong
+    val file = new File("./micro-benchmark-" + java.time.LocalDate.now.toString + ".log")
+    val bw = new BufferedWriter(new FileWriter(file, true))
+    bw.write("-----------\n")
+    bw.write("file:" + filePath + "\n")
     val someFile = new File(filePath)
     val fileSize = someFile.length()
     val smallDF = spark.read.format("json").load(filePath)
@@ -92,8 +95,9 @@ object SparkSQLExample {
       })
       println("Warm up end. It costs: " + (System.currentTimeMillis() - warm_start_time) + " ms")
     }
-    val start_time = System.currentTimeMillis()
+
     println("-----start time:" + format.format(Calendar.getInstance().getTime()) + "-----")
+    val start_time = System.currentTimeMillis()
     stringArray.foreach((s: String) => {
       rawParser.parse(s, createParserFunction, UTF8String.fromString)
     })
@@ -101,6 +105,10 @@ object SparkSQLExample {
     println("-----end time:" + format.format(Calendar.getInstance().getTime()) + "-----")
     println("CPU JSON performance costs: " + (end_time - start_time) + " ms, throughput is " +
       fileSize*1000.toDouble/(end_time - start_time)/1024.toDouble/1024.toDouble + " M/s")
+
+    bw.write("CPU micro(ms):" + (end_time - start_time) + ", throuput is " +
+      fileSize*1000.toDouble/(end_time - start_time)/1024.toDouble/1024.toDouble + "\n");
+    bw.close();
     Thread.sleep(5000)
   }
   def createParser(jsonFactory: JsonFactory, record: String): JsonParser = {
