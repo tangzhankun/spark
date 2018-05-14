@@ -76,8 +76,8 @@ class FPGAJsonParser(
     case _ => false
   })
 
-  private val constRowSize = stringFieldCount * (128 + 8) + 8*(4-stringFieldCount) + 8
-
+  //private val constRowSize = stringFieldCount * (128 + 8) + 8*(4-stringFieldCount) + 8
+  private val constRowSize = 56
   //println(s"const row size: $constRowSize")
 
   def parseText(

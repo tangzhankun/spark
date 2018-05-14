@@ -30,6 +30,17 @@ object RankingMetricsExample {
       .builder
       .appName("RankingMetricsExample")
       .getOrCreate()
+    val userDF = spark.read.parquet("/tmp/user_actions.parquet")
+    userDF.createOrReplaceTempView("user_actions")
+    val itemDF = spark.read.parquet("/tmp/items.parquet")
+    itemDF.createOrReplaceTempView("items")
+    val ratingsDF = spark.sql("select max(user_actions.bahavior) as rating," +
+      "user_actions.user_id as uid, user_actions.item_id as iid" +
+      " from user_actions join items on user_actions.item_id=items.item_id"
+      )
+    val ratings_test = ratingsDF.rdd.map { r =>
+      Rating(r(0).asInstanceOf[Int], r(1).asInstanceOf[Int], r(2).asInstanceOf[Int] - 2.5)
+    }.cache()
     import spark.implicits._
     // $example on$
     // Read in the ratings data
