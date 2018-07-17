@@ -140,13 +140,14 @@ class FPGAJsonParser(
     // should throw [[[BadRecordException]]] in parser if failed
   }
   def arrayToTuple(arrs : Array[Long]) : (Long, Long) = {
+    //println(s"zhankun-debug in arrayToTuple")
     arrs match {
       case Array(buff_addr, buff_size) => {
-        //println(s"addr:$buff_addr, size: $buff_size")
+        println(s"addr:$buff_addr, size: $buff_size")
         (buff_addr, buff_size)
       }
       case _ => {
-        //println("wrong return value from FPGAJsonParser's native method")
+        println("wrong return value from FPGAJsonParser's native method")
         (-1, 0)
       }
     }
@@ -193,33 +194,42 @@ class FPGAJsonParser(
   def parseFileWithFileNameAndGetAddress(
                                filePath : String): Iterator[InternalRow] = {
     val parser = initJniParser2
-    arrayToTuple(parser.parseJson3(filePath)) match {
+    val start_time = System.currentTimeMillis()
+    val res_long = parser.parseJson3(filePath)
+    val end_time = System.currentTimeMillis()
+    println("zhankun-debug JNI total time:" + (end_time - start_time) + "ms" );
+    arrayToTuple(res_long) match {
       case (-1, _) => Nil.toIterator
       case (0, _) => Nil.toIterator
       case (_, 0) => {
         println("bufer size is 0! unknown error!")
         Nil.toIterator
       }
-      case (buff_addr, buff_size) => new Iterator[InternalRow] {
-        private var cnt = 0
-        private val max = buff_size
-        override def hasNext: Boolean = {
-          cnt*constRowSize < max
-        }
-        override def next(): InternalRow = {
-          val rowSize = constRowSize
-          val rowOffset = buff_addr + constRowSize * cnt
-          cnt += 1
-          // TODO
-          // scalastyle:off
-          println(s"------count:$cnt, decoded $constRowSize bytes from address $rowOffset (max:$max) ---------")
-          val p = rowOffset;
-          for (p <- rowOffset to rowOffset +rowSize) {
-            print(Platform.getByte(null, p) + ",")
+      case (buff_addr, buff_size) => {
+        //println(s"zhankun-debug in case (buffer_addr, buff_size)")
+        new Iterator[InternalRow] {
+          private var cnt = 0
+          private val max = buff_size
+
+          override def hasNext: Boolean = {
+            cnt * constRowSize < max
           }
-          println("-------------------")
-          // scalastyle:on
-          jniConverter2(rowOffset, rowSize)
+
+          override def next(): InternalRow = {
+            val rowSize = constRowSize
+            val rowOffset = buff_addr + constRowSize * cnt
+            cnt += 1
+            // TODO
+            // scalastyle:off
+//            println(s"------count:$cnt, decoded $constRowSize bytes from address $rowOffset (max:$max) ---------")
+//            val p = rowOffset;
+//            for (p <- rowOffset to rowOffset + rowSize) {
+//              print(Platform.getByte(null, p) + ",")
+//            }
+//            println("-------------------")
+            // scalastyle:on
+            jniConverter2(rowOffset, rowSize)
+          }
         }
       }
     }
